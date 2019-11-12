@@ -1,0 +1,23 @@
+n = int(input())
+l1 = list(map(int, input().split()))
+m = int(input())
+l2 = list(map(int, input().split()))
+sum_min = 0
+sum_now = 0
+for i in range(n):
+    sum_min += (l1[i] - l2[i]) ** 2
+if sum_min == 0:
+    print(0)
+else:
+    for j in range(1, m - n):
+        for i in range(n):
+            sum_now += (l1[i] - l2[i + j]) ** 2
+        if sum_now == 0:
+            sum_min = 0
+            print(0)
+            break
+        elif sum_now < sum_min:
+            sum_min = sum_now
+        sum_now = 0
+    if sum_min != 0:
+        print(sum_min)
