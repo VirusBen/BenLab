@@ -1,0 +1,194 @@
+package test;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+public class c {
+//Beaver's Calculator  
+ 
+	final static int maxn=5000;
+	static class t{
+		int pos,count;//pos:当前的位置，count：某一个科学家的问题数
+		long  p[]=new long [maxn+5];//科学家对应问题的资源数 从一开始
+	}
+	static class T2{
+		int pos,count;//pos:当前的位置，count：某一个科学家的问题数
+		long  p[]=new long [200005];//科学家对应问题的资源数 从一开始
+	}
+	static t q[];//保存每个科学家的问题情况
+	static T2 Q[];//n=2时  p[i] i=200005很大 会炸内存，必须先搞出来
+	
+	static class s{//安排的对应情况
+		int id;//对应的科学家
+		long  key;//需要的资源
+	}
+	static s R[]=new s[200005];//安排
+	static s R1[]=new s[200005];
+	
+	static void init(int n)//初始化
+	{
+		if(n==2)//分类讨论
+		{
+			Q=new T2[3];	
+			for(int i=1;i<=n;i++)//从1开始计数
+				Q[i]=new T2();
+		}
+		else
+		{
+			q=new t[n+1];	
+			for(int i=1;i<=n;i++)
+				q[i]=new t();
+		}
+		
+		for(int i=0;i<200005;i++)
+		{
+			R[i]=new s();
+			R1[i]=new s();
+		}	
+	}
+	
+	static void Merge(int s,int m,int t)
+	{
+		int i,j,k;
+		i=s;//R1第一个序列的始点
+		j=m+1;//R1第二个序列的始点
+		k=s;//R的始点 
+		while(i<=m&&j<=t)
+		{
+			if(R1[i].key<R1[j].key)//从小到大
+				R[k++]=R1[i++];
+			else
+				R[k++]=R1[j++];
+		}
+		while(i<=m) R[k++]=R1[i++];//如果R1第二个序列先排完
+		while(j<=t) R[k++]=R1[j++];//如果R1第一个序列先排完
+		
+		for(i=s;i<k;i++)
+			R1[i]=R[i];//将拍好序列的元素再赋值给R1
+		
+	}
+	
+	static void Msort(int s,int t)//二分法归并
+	{
+		if(s<t)
+		{
+			int m=(s+t)/2;
+			Msort(s,m);
+			Msort(m+1,t);
+			Merge(s,m,t);
+		}
+	}
+	
+	public static void main(String[] args) throws IOException {
+		int n,r,k,x,y,m;
+		
+		int length=0;
+		int ans=-1;
+		int start=0,end=0;
+		
+		BufferedReader bfr=new BufferedReader(new InputStreamReader(System.in));
+//加快输入
+		String str=bfr.readLine();
+		String S[]=str.split(" ");
+		n=Integer.parseInt(S[0]);
+		
+		init(n);
+		
+		for(int i=1;i<=n;i++)
+		{
+			str=bfr.readLine();
+			S=str.split(" ");
+			k=Integer.parseInt(S[0]);
+			r=Integer.parseInt(S[1]);
+			x=Integer.parseInt(S[2]);
+			y=Integer.parseInt(S[3]);
+			m=Integer.parseInt(S[4]);
+			
+			int sum=0;
+			length+=k;
+			if(n==2)
+			{
+				Q[i].pos=1;//现在的位置
+				Q[i].count=k;//科学家i的问题总数
+				Q[i].p[1]=r;//第一个问题所需资源数
+				for(int j=2;j<=k;j++)
+				{
+					Q[i].p[j]=(Q[i].p[j-1]*x+y)%m;
+					if(Q[i].p[j]<Q[i].p[j-1])
+						sum++;
+				}
+			}
+			else
+			{
+				q[i].pos=1;//现在的位置
+				q[i].count=k;//科学家i的问题总数
+				q[i].p[1]=r;//第一个问题所需资源数
+				for(int j=2;j<=k;j++)
+				{
+					q[i].p[j]=(q[i].p[j-1]*x+y)%m;
+					if(q[i].p[j]<q[i].p[j-1])
+						sum++;
+				}
+			}
+			
+			ans=Math.max(ans, sum);
+//我们所需要求的最优顺序下最少的“坏对”个数，就是所有科学家所提出的问题的序列中的最多“坏对”的个
+//数，即为所求。
+		}
+		System.out.println(ans);
+		
+		if(length<=200000)//依题意
+		{
+			while(end<length)//从0开始
+			{
+				if(n==2)
+				{
+					for(int i=1;i<=n;i++)
+					{
+						int j;
+						for( j=Q[i].pos;j<=Q[i].count;j++)
+						{
+							if(j!=Q[i].pos&&Q[i].p[j]<Q[i].p[j-1])//发现坏对
+							{
+								Q[i].pos=j;
+								break;//跳出循环 破坏之  求的都是升序段
+							}
+							R1[end].id=i;
+							R1[end++].key=Q[i].p[j];
+						}
+						if(j>Q[i].count)
+							Q[i].pos=j;//已完，科学家i的问题不在参与循环
+					}
+				}
+				else
+				{
+					for(int i=1;i<=n;i++)
+					{
+						int j;
+						for( j=q[i].pos;j<=q[i].count;j++)
+						{
+							if(j!=q[i].pos&&q[i].p[j]<q[i].p[j-1])//发现坏对
+							{
+								q[i].pos=j;
+								break;//跳出循环 破坏之  求的都是升序段
+							}
+							R1[end].id=i;
+							R1[end++].key=q[i].p[j];
+						}
+						if(j>q[i].count)
+							q[i].pos=j;//已完，科学家i的问题不在参与循环
+					}
+				}
+			
+				Msort(start,end-1);
+//对所有科学家的升序段进行排序不会改变某一个科学家问题排列的相对位置。随便举个例子就OK啦，
+//end-1是因为 前面的是end++ 后自增，所以结束时，其大小要比数组最后一个有意义的值的序列值要大1
+				start=end;//同理 ，开始下一段
+			}
+			for(int i=0;i<length;i++)
+				System.out.println(R1[i].key+" "+R1[i].id);
+		}
+		
+	}
+ 
+}
